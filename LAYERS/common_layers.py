@@ -21,7 +21,7 @@ def conv2d_with_padding(inputs, filters, kernel_size, strides=1, data_format):
         padding = 'valid'
     return tf.layers.conv2d(inputs=inputs, filters=filters, kernel_size=kernel_size,
                 strides=strides, padding=padding, use_bias= False, data_format=data_format, kernel_regularizer=l2(0.0005))
-
+o
 #Residual block for Darknet 
 def darknet_residual(inputs, filters, training, data_format, strides=1, leaky_relu):
     shortcut = inputs
@@ -74,9 +74,26 @@ def yolo_convolution_block(inputs, filters, training, data_format,leaky_relu):
 #Final detection layer
 def yolo_layer(inputs, num_classes, anchors, img_size, data_format):
     n_anchors = len(anchors)
-
-    inputs = tf.layers.conv2d(inputs, filters=n_anchors * (5 + n_classes),
+    #Last Convolution
+    output = tf.layers.conv2d(inputs, filters=n_anchors * (5 + n_classes),
                               kernel_size=1, strides=1, use_bias=True,
                               data_format=data_format)
     
+    shape_output = output.get_shape().as_list()
 
+    if data_format == 'channels_first':
+        grid_shape = shape_output[2:4]
+        output = tf.transpose(output, [0,2,3,1])
+    else:
+        grid_shape = shape_output[1:3]
+
+    output_reshaped = tf.reshape(output, [-1, n_anchors*grid_shape[0]*grid_shape[1], 5+n_classes])
+    #For example from (1,13,13,255) to (1,3*13*13,85)
+
+    #Now we can get the values of the boxes
+    box_center, box_shape, confidence, classes = tf.split(output_reshaped, [2,2,1,n_classes], axis=-1)
+    strides = (img_size[0] // grid_shape[0], img_size[1] // grid_shape[1])
+
+
+
+    
