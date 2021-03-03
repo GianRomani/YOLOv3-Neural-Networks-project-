@@ -1,4 +1,4 @@
-import common_layers
+from LAYERS.common_layers import  *
 
 #Darknet53 -> feature extraction
 def darknet53(inputs, training, data_format):
@@ -6,20 +6,20 @@ def darknet53(inputs, training, data_format):
     inputs = batch_norm(inputs, training, data_format)
     inputs = tf.nn.leaky_relu(inputs, alpha=leaky_relu)
 
-    inputs = conv2d_with_padding(inputs, filters=64, kernel_size=3, strides=2, data_format)
+    inputs = conv2d_with_padding(inputs, 64, 3, 2, data_format)
     inputs = batch_norm(inputs, training, data_format)
     inputs = tf.nn.leaky_relu(inputs, alpha= leaky_relu)
 
     inputs = darknet_residual(inputs, filters=32, training=training, data_format=data_format)
 
-    inputs = conv2d_with_padding(inputs, filters=128, kernel_size=3, strides=2, data_format)
+    inputs = conv2d_with_padding(inputs, 128, 3, 2, data_format)
     inputs = batch_norm(inputs, training, data_format)
     inputs = tf.nn.leaky_relu(inputs, alpha= leaky_relu)
 
     for i in range(2):
         inputs = darknet_residual(inputs, filters=64, training=training, data_format=data_format)
 
-    inputs = conv2d_with_padding(inputs, filters=256, kernel_size=3, strides=2, data_format)
+    inputs = conv2d_with_padding(inputs, 256, 3, 2, data_format)
     inputs = batch_norm(inputs, training, data_format)
     inputs = tf.nn.leaky_relu(inputs, alpha= leaky_relu)
 
@@ -28,7 +28,7 @@ def darknet53(inputs, training, data_format):
 
     route1 = inputs
 
-    inputs = conv2d_with_padding(inputs, filters=512, kernel_size=3, strides=2, data_format)
+    inputs = conv2d_with_padding(inputs, 512, 3, 2, data_format)
     inputs = batch_norm(inputs, training, data_format)
     inputs = tf.nn.leaky_relu(inputs, alpha= leaky_relu)
 
@@ -37,7 +37,7 @@ def darknet53(inputs, training, data_format):
 
     route2 = inputs
 
-    inputs = conv2d_with_padding(inputs, filters=1024, kernel_size=3, strides=2, data_format)
+    inputs = conv2d_with_padding(inputs, 1024, 3, 2, data_format)
     inputs = batch_norm(inputs, training, data_format)
     inputs = tf.nn.leaky_relu(inputs, alpha= leaky_relu)
 
