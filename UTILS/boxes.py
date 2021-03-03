@@ -34,8 +34,8 @@ def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
     y2 = ty + th / 2    #bottomleft_y corner
 
     #finally we pack all values together to be used for NMS
-    boxes = tf.concat([x1, y1, 
-                        x2, y2, 
+    boxes = tf.concat([y1, x1 
+                        y2, x2, 
                         confidence, classes], axis=-1)
 
 
@@ -43,12 +43,17 @@ def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
 
 def nms (inputs, classes, iou_threshold, confidence_threshold):
     
-    inputs = tf.unstack(inputs)
+    diag_coord, confidence, classes = \
+        tf.split(inputs, [4,1,-1], axis = -1)
+    
+    scores = confidence * classes
 
+    
+    '''
     for boxes in inputs:
         boxes = tf.boolean_mask(boxes, boxes[:,4] > confidence_threshold)
         classes = tf.argmax(boxes[:, 5:], axis=-1)
-
+    '''
 
     #tf.image.combined_non_max_suppression(
         #boxes, scores, 
