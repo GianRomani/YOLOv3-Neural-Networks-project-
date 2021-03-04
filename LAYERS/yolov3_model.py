@@ -1,4 +1,10 @@
 import tensorflow as tf
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Input
+from LAYERS.darknet53 import *
+from LAYERS.common_layers import *
+from UTILS import boxes
+
 #upsample, out_shape is obtained from the shape of route1 or route2
 #Nearest neighbor interpolation is used to unsample inputs to out_shape
 def upsample(inputs, out_shape, data_format):
@@ -18,5 +24,45 @@ def upsample(inputs, out_shape, data_format):
 
     return inputs
 
-#YOLOv3 
-#def Yolov3(channels=3):
+#YOLOv3 model
+def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, data_format, activation, channels=3, training=False):
+    
+    input = Input([None,None,3])
+    #Backbone
+    route1, route2, inputs = darknet53(input, activation)
+    #Detect1
+    route, inputs = yolo_convolution_block(inputs, 512, training, data_format, activation)
+    
+    detect1 = yolo_layer(inputs, n_classes, anchors[6:9], model_size, data_format)
+
+    inputs = conv2d_with_padding(inputs, 256, 1, data_format)
+    inputs = batch_norm(inputs, training, data_format) 
+    #inputs = tf.nn.leaky_relu(inputs, alpha = activation)
+    inputs = LeakyReLU(alpha=activation)(inputs)
+    upsample_size = route2.get_shape().as_list()
+    inputs = upsample(inputs, upsample_size, data_format)
+    inputs = tf.concat([inputs,route2], axis=3)
+    #Detect2
+    route, inputs = yolo_convolution_block(inputs, 256, training, data_format, activation)
+    
+    detect2 = yolo_layer(inputs, n_classes, anchors[3:6], model_size, data_format)
+
+    inputs = conv2d_with_padding(inputs, 128, 1, data_format)
+    inputs = batch_norm(inputs, training, data_format) 
+    #inputs = tf.nn.leaky_relu(inputs, alpha = activation)
+    inputs = LeakyReLU(alpha=activation)(inputs)
+    upsample_size = route1.get_shape().as_list()
+    inputs = upsample(inputs, upsample_size, data_format)
+    inputs = tf.concat([inputs,route1], axis=3)
+    #Detect3
+    route, inputs = yolo_convolution_block(inputs, 128, training, data_format, activation)
+    
+    detect3 = yolo_layer(inputs, n_classes, anchors[0:3], model_size, data_format)
+
+    inputs = tf.concat([detect1, detect2, detect3], axis=1)
+
+    inputs = build_boxes(inputs)
+
+    outputs = nms(inputs, n_classes, iou_threshold, confidence_threshold)
+
+    return Model(input, outputs)
