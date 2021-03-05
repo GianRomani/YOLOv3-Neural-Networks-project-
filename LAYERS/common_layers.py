@@ -28,6 +28,14 @@ def conv2d_with_padding(inputs, filters, kernel_size, data_format, strides=1):
 
     return output
 
+#Convolutional block 
+def convolutional_block(inputs, filters, kernel_size, training, data_format, activation, name=None, strides=1):
+    inputs = conv2d_with_padding(inputs, filters, kernel_size, data_format, strides)
+    inputs = batch_norm(inputs, training, data_format)
+    #inputs = tf.nn.leaky_relu(inputs, alpha= activation)
+    outputs = LeakyReLU(alpha=activation)(inputs)
+    return outputs
+
 #Residual block for Darknet 
 def darknet_residual(inputs, filters, training, data_format, activation, strides=1):
     shortcut = inputs
@@ -49,7 +57,7 @@ def darknet_residual(inputs, filters, training, data_format, activation, strides
 #Layers to be used after Darknet53 -> yolo_convolution_block and yolo_layer
 
 #Five convolutional blocks for the route, then another one for the output
-def yolo_convolution_block(inputs, filters, training, data_format,activation):
+def yolo_convolution_block(inputs, filters, training, data_format, activation, name=None):
     #1
     inputs = conv2d_with_padding(inputs, filters, kernel_size=1, data_format=data_format)
     inputs = batch_norm(inputs, training, data_format)
@@ -86,7 +94,7 @@ def yolo_convolution_block(inputs, filters, training, data_format,activation):
     return route, output
 
 #Final detection layer
-def yolo_layer(inputs, n_classes, anchors, img_size, data_format):
+def yolo_layer(inputs, n_classes, anchors, img_size, data_format, name=None):
     n_anchors = len(anchors)
     #Last Convolution
     output = Conv2D(filters=n_anchors * (5 + n_classes),

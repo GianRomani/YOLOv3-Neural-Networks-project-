@@ -30,35 +30,35 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
     #input = Input([None,None,3])
     input = Input([model_size[0],model_size[1],3]) #Per ora ho messo 416x416 anche per darknet53
     #Backbone
-    route1, route2, inputs = darknet53(input, activation)
+    route1, route2, inputs = darknet53(input, activation, name='yolo_darknet')
     #Detect1
-    route, inputs = yolo_convolution_block(inputs, 512, training, data_format, activation)
+    route, inputs = yolo_convolution_block(inputs, 512, training, data_format, activation, name='yolo_conv0')
     
-    detect1 = yolo_layer(inputs, n_classes, anchors[6:9], model_size, data_format)
+    detect1 = yolo_layer(inputs, n_classes, anchors[6:9], model_size, data_format, name='yolo_layer0')
 
-    inputs = conv2d_with_padding(inputs, 256, 1, data_format)
-    inputs = batch_norm(inputs, training, data_format) 
+    inputs = convolutional_block(inputs, 256, 1, training, data_format, activation, name='conv_block0')
+    #inputs = batch_norm(inputs, training, data_format) 
     #inputs = tf.nn.leaky_relu(inputs, alpha = activation)
-    inputs = LeakyReLU(alpha=activation)(inputs)
+    #inputs = LeakyReLU(alpha=activation)(inputs)
     upsample_size = route2.get_shape().as_list()
     inputs = upsample(inputs, upsample_size, data_format)
     inputs = tf.concat([inputs,route2], axis=3)
     #Detect2
-    route, inputs = yolo_convolution_block(inputs, 256, training, data_format, activation)
+    route, inputs = yolo_convolution_block(inputs, 256, training, data_format, activation, name='yolo_conv1')
     
-    detect2 = yolo_layer(inputs, n_classes, anchors[3:6], model_size, data_format)
+    detect2 = yolo_layer(inputs, n_classes, anchors[3:6], model_size, data_format, name='yolo_layer1')
 
-    inputs = conv2d_with_padding(inputs, 128, 1, data_format)
-    inputs = batch_norm(inputs, training, data_format) 
+    inputs = convolutional_block(inputs, 128, 1, training, data_format, activation, name='conv_block1')
+    #inputs = batch_norm(inputs, training, data_format) 
     #inputs = tf.nn.leaky_relu(inputs, alpha = activation)
-    inputs = LeakyReLU(alpha=activation)(inputs)
+    #inputs = LeakyReLU(alpha=activation)(inputs)
     upsample_size = route1.get_shape().as_list()
     inputs = upsample(inputs, upsample_size, data_format)
     inputs = tf.concat([inputs,route1], axis=3)
     #Detect3
-    route, inputs = yolo_convolution_block(inputs, 128, training, data_format, activation)
+    route, inputs = yolo_convolution_block(inputs, 128, training, data_format, activation, name='yolo_conv2')
     
-    detect3 = yolo_layer(inputs, n_classes, anchors[0:3], model_size, data_format)
+    detect3 = yolo_layer(inputs, n_classes, anchors[0:3], model_size, data_format, name='yolo_layer2')
 
     inputs = tf.concat([detect1, detect2, detect3], axis=1)
 
