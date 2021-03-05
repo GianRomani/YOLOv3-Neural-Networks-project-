@@ -3,7 +3,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Input
 from LAYERS.darknet53 import *
 from LAYERS.common_layers import *
-from UTILS import boxes
+from UTILS.boxes import *
 
 #upsample, out_shape is obtained from the shape of route1 or route2
 #Nearest neighbor interpolation is used to unsample inputs to out_shape
@@ -17,7 +17,7 @@ def upsample(inputs, out_shape, data_format):
         new_height = out_shape[2]
         new_width = out_shape[1]
 
-    inputs = tf.image.resize_nearest_neighbor(inputs, (new_height, new_width))
+    inputs = tf.image.resize(inputs, [new_height, new_width], method='nearest')
 
     if data_format == 'channels_first':
         inputs = tf.transpose(inputs, [0, 3, 1, 2])
@@ -27,7 +27,8 @@ def upsample(inputs, out_shape, data_format):
 #YOLOv3 model
 def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, data_format, activation, channels=3, training=False):
     
-    input = Input([None,None,3])
+    #input = Input([None,None,3])
+    input = Input([model_size[0],model_size[1],3]) #Per ora ho messo 416x416 anche per darknet53
     #Backbone
     route1, route2, inputs = darknet53(input, activation)
     #Detect1

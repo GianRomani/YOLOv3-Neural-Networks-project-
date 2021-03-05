@@ -1,4 +1,5 @@
 from UTILS.boxes import *
+from UTILS.load_weights import *
 from LAYERS.darknet53 import *
 from LAYERS.common_layers import *
 from LAYERS.yolov3_model import *
@@ -9,7 +10,7 @@ LEAKY_RELU = 0.1
 ANCHORS = [(10, 13), (16, 30), (33, 23),
             (30, 61), (62, 45), (59, 119),
             (116, 90), (156, 198), (373, 326)]
-WEIGHTS_PATH = '\yolov3.weights'
+WEIGHTS_PATH = 'yolov3.weights'
 NUM_CLASSES = 80
 LABELS_PATH = '\DATASET\coco.names'
 MODEL_IMG_SIZE = (416,416)
@@ -33,7 +34,7 @@ def main():
     yolo = yolov3(NUM_CLASSES, MODEL_IMG_SIZE, ANCHORS,
             IOU_THRESHOLD, CONFIDENCE_THRESHOLD, None, LEAKY_RELU)
 
-    load_weights(yolo, WEIGHTS_PATH)
+    load_darknet_weights(yolo, WEIGHTS_PATH)
     img = cv2.imread(IMG_PATH)
     img = tf.image.decode_image(open(IMG_PATH, 'rb').read(), channels=3)
     img = tf.expand_dims(img,0)

@@ -1,11 +1,16 @@
 import numpy as np
 import tensorflow as tf
-
-
 from tensorflow.keras import Model
 
-
-
+YOLO_V3_LAYERS = [
+  'yolo_darknet',
+  'yolo_conv_0',
+  'yolo_output_0',
+  'yolo_conv_1',
+  'yolo_output_1',
+  'yolo_conv_2',
+  'yolo_output_2',
+]
 
 def load_darknet_weights(model, weights_file):
   wf = open(weights_file, 'rb')

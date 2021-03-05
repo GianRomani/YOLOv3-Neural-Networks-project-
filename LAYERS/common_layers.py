@@ -135,7 +135,7 @@ def yolo_layer(inputs, n_classes, anchors, img_size, data_format):
 
     anchors = tf.tile(anchors, [grid_shape[0] * grid_shape[1], 1])
     #Computing the actual width and height on the feature map
-    box_shapes = tf.exp(box_shapes) * tf.to_float(anchors)
+    box_shapes = tf.exp(box_shapes) * tf.cast(anchors, dtype=tf.float32)
 
     confidence = tf.nn.sigmoid(confidence)
     #Softmaxing class scores assume that the classes are mutually exclusive
