@@ -29,12 +29,17 @@ def load_darknet_weights(model, weights_file):
             sub_model.layers[i + 1].name.startswith('batch_norm'):
         batch_norm = sub_model.layers[i + 1]
 
-      logging.info("{}/{} {}".format(
-        sub_model.name, layer.name, 'bn' if batch_norm else 'bias'))
+      #logging.info("{}/{} {}".format(
+        #sub_model.name, layer.name, 'bn' if batch_norm else 'bias'))
 
       filters = layer.filters
+      #print(filters)
       size = layer.kernel_size[0]
-      in_dim = layer.input_shape[-1]
+      #print("here")
+      #print(layer.get_input_shape_at(0))
+      #print(layer.get_input_shape_at(1)[1])
+      #in_dim = layer.input_shape[-1]
+      in_dim = (layer.get_input_shape_at(1)[3])
 
       if batch_norm is None:
         conv_bias = np.fromfile(wf, dtype=np.float32, count=filters)

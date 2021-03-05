@@ -28,9 +28,9 @@ def upsample(inputs, out_shape, data_format):
 def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, data_format, activation, channels=3, training=False):
     
     #input = Input([None,None,3])
-    input = Input([model_size[0],model_size[1],3]) #Per ora ho messo 416x416 anche per darknet53
+    x = inputs = Input([model_size[0],model_size[1],3]) #Per ora ho messo 416x416 anche per darknet53
     #Backbone
-    route1, route2, inputs = darknet53(input, activation, name='yolo_darknet')
+    route1, route2, inputs = darknet53(inputs, activation, name='yolo_darknet')(inputs)
     #Detect1
     route, inputs = yolo_convolution_block(inputs, 512, training, data_format, activation, name='yolo_conv0')
     
@@ -66,4 +66,8 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
 
     outputs = nms(inputs, n_classes, iou_threshold, confidence_threshold)
 
-    return Model(input, outputs)
+    aux = Model(x, outputs, name='yolov3')
+
+    aux.summary()
+
+    return aux
