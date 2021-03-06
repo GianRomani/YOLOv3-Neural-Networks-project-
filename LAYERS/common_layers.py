@@ -1,6 +1,10 @@
 import tensorflow as tf
-from tensorflow.keras.layers import ZeroPadding2D, Conv2D, LeakyReLU
+from tensorflow.keras.layers import ZeroPadding2D, Conv2D, LeakyReLU, Input
 from tensorflow.keras.regularizers import l2
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Add
+
+COUNT = 0
 
 #Batch Normalization with parameters taken from the cfg file
 def batch_norm(inputs, training, data_format, momentum=0.9, epsilon=1e-05):
@@ -26,6 +30,9 @@ def conv2d_with_padding(inputs, filters, kernel_size, data_format, strides=1):
                 strides=temp, padding=padding, use_bias= False, 
                 data_format=data_format, kernel_regularizer=l2(0.0005))(inputs)
 
+                
+    print(COUNT)
+
     return output
 
 #Convolutional block 
@@ -50,7 +57,8 @@ def darknet_residual(inputs, filters, training, data_format, activation, strides
     #output = tf.nn.leaky_relu(inputs, alpha= activation)
     output = LeakyReLU(alpha=activation)(inputs)
 
-    output += shortcut
+    output = Add()([shortcut, output])
+    #output += shortcut
 
     return output
 
@@ -58,6 +66,13 @@ def darknet_residual(inputs, filters, training, data_format, activation, strides
 
 #Five convolutional blocks for the route, then another one for the output
 def yolo_convolution_block(inputs, filters, training, data_format, activation, name=None):
+    '''
+    print("here")
+    print(tf.shape(inputs))
+    print(inputs)
+    print("done")
+    #x = inputs
+    '''
     #1
     inputs = conv2d_with_padding(inputs, filters, kernel_size=1, data_format=data_format)
     inputs = batch_norm(inputs, training, data_format)
@@ -91,6 +106,7 @@ def yolo_convolution_block(inputs, filters, training, data_format, activation, n
     #output = tf.nn.leaky_relu(inputs, alpha= activation)
     output = LeakyReLU(alpha=activation)(inputs)
 
+    #return Model(x, (route,output), name=name)
     return route, output
 
 #Final detection layer
@@ -110,7 +126,7 @@ def yolo_layer(inputs, n_classes, anchors, img_size, data_format, name=None):
     else:
         grid_shape = shape_output[1:3]
 
-    print(n_anchors, shape_output, grid_shape[0], grid_shape[1])
+    #print(n_anchors, shape_output, grid_shape[0], grid_shape[1])
     output_reshaped = tf.reshape(output, [-1, n_anchors*grid_shape[0]*grid_shape[1], 5+n_classes])
     #For example from (1,13,13,255) to (1,3*13*13,85)
 

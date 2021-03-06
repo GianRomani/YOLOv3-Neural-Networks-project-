@@ -10,13 +10,13 @@ LEAKY_RELU = 0.1
 ANCHORS = [(10, 13), (16, 30), (33, 23),
             (30, 61), (62, 45), (59, 119),
             (116, 90), (156, 198), (373, 326)]
-WEIGHTS_PATH = 'yolov3.weights'
+WEIGHTS_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/yolov3.weights'
 NUM_CLASSES = 80
 LABELS_PATH = '\DATASET\coco.names'
 MODEL_IMG_SIZE = (416,416)
 IOU_THRESHOLD = 0.5	
 CONFIDENCE_THRESHOLD = 0.5
-IMG_PATH = '\DATASET\dog.jpg'
+IMG_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET/dog.jpg'
 
 CLASS_NAMES =  ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck",
   "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
@@ -33,16 +33,31 @@ CLASS_NAMES =  ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "tr
 def main():
     yolo = yolov3(NUM_CLASSES, MODEL_IMG_SIZE, ANCHORS,
             IOU_THRESHOLD, CONFIDENCE_THRESHOLD, None, LEAKY_RELU)
-
-    load_darknet_weights(yolo, WEIGHTS_PATH)
+    
+    print("Loading weights...")
+    print()
+    load_yolo_weights_2(yolo, WEIGHTS_PATH)
+    print("Loading done! Congrats!!!!!")
+    print()
+    #weight_reader = WeightReader(WEIGHTS_PATH)
+    #weight_reader.load_weights(yolo)
+    
+    #yolo.load_weights(WEIGHTS_PATH)
+    #load_darknet_weights(yolo, WEIGHTS_PATH)
     img = cv2.imread(IMG_PATH)
+    #print("@")
+    #print(type(img))
     img = tf.image.decode_image(open(IMG_PATH, 'rb').read(), channels=3)
     img = tf.expand_dims(img,0)
     img = tf.image.resize(img, MODEL_IMG_SIZE) /255
+    #print("!")
+    #print(type(img))
 
     boxes, scores, classes, nums = yolo(img)
 
     result = draw_boxes(img, (boxes, scores, classes, nums), CLASS_NAMES)
-    cv2_imshow(result)
-
+    #print(result)
+    tf.keras.preprocessing.image.save_img('/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/result.png',result[0])
+    #cv2.imshow('image',result)
+    
 main()

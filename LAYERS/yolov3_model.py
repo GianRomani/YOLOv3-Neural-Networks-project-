@@ -30,7 +30,7 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
     #input = Input([None,None,3])
     x = inputs = Input([model_size[0],model_size[1],3]) #Per ora ho messo 416x416 anche per darknet53
     #Backbone
-    route1, route2, inputs = darknet53(inputs, activation, name='yolo_darknet')(inputs)
+    route1, route2, inputs = darknet53(inputs, activation, name='yolo_darknet')#(inputs)
     #Detect1
     route, inputs = yolo_convolution_block(inputs, 512, training, data_format, activation, name='yolo_conv0')
     
@@ -68,6 +68,6 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
 
     aux = Model(x, outputs, name='yolov3')
 
-    aux.summary()
+    #aux.summary()
 
     return aux

@@ -5,8 +5,33 @@ import tensorflow as tf
 
 
 def draw_boxes(img, outputs, class_names): #visual representation of model's computed BB
-    nms_boxes, nms_score, nms_classes, nums = outputs 
+    '''
+    print()
+    print("Ispection of input var 'output' of draw_bb")
+    print(outputs)
+    print()
+    '''
+
+    nms_boxes, nms_score, nms_classes, nums = outputs
+
     boxes, score, classes, nums = nms_boxes[0], nms_score[0], nms_classes[0], nums[0] #values returned explicitely by the yolo detection
+
+    '''
+    print("Ispection of outputs[0] variable")
+    print("-----------")
+    print("Boxes-->")
+    print()
+    print(boxes)
+    print("Score-->")
+    print()
+    print(score)
+    print("Classes-->")
+    print()
+    print(classes)
+    print("Nums-->")
+    print()
+    print(nums)
+    '''
 
     img_scale = np.flip(img.shape[0:2]) #get widht/height of the image to adjust bb dim
 
@@ -16,7 +41,8 @@ def draw_boxes(img, outputs, class_names): #visual representation of model's com
 
         img = cv2.rectangle(img, x1y1, x2y2, (255,0,0), 2) #draw rectangle bases on new coordinates
         img = cv2.putText(img, '{} {:.4f}'.format(class_names[int(classes[i])], score[i]),txty, cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2) #for each detection complete the rectangle description
-
+    #print("#")
+    #print(type(img))
     return img
 
 def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
@@ -63,11 +89,18 @@ def nms (inputs, classes, iou_threshold, confidence_threshold):
         tf.image.combined_non_max_suppression(
             boxes = tf.reshape(diag_coord, (tf.shape(diag_coord)[1], -1, 1, 4)),
             scores = tf.reshape(scores, (tf.shape(scores)[1], -1, tf.shape(classes)[-1])),
-            max_output_size_per_class = 100,
-            max_total_size = 100,
+            max_output_size_per_class = 5,
+            max_total_size = 5,
             iou_threshold = iou_threshold,
             score_threshold = confidence_threshold
         )
+    '''
+    print("Inspecting result of NMS")
+    print(nms_boxes)
+    print(nms_scores)
+    print(nms_classes)
+    print(valid_detections)
+    '''
 
     return nms_boxes, nms_scores, nms_classes, valid_detections
     
