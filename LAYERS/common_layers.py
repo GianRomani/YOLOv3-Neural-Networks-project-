@@ -4,7 +4,6 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Add
 
-COUNT = 0
 
 #Batch Normalization with parameters taken from the cfg file
 def batch_norm(inputs, training, data_format, momentum=0.9, epsilon=1e-05):
@@ -29,9 +28,6 @@ def conv2d_with_padding(inputs, filters, kernel_size, data_format, strides=1):
     output = Conv2D(filters=filters, kernel_size=kernel_size,
                 strides=temp, padding=padding, use_bias= False, 
                 data_format=data_format, kernel_regularizer=l2(0.0005))(inputs)
-
-                
-    print(COUNT)
 
     return output
 

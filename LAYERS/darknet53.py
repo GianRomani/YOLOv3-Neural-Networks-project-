@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Input
 #Darknet53 -> feature extraction
 def darknet53(inputs, activation, name=None, training=False, data_format=None):
     x = inputs
-    count = 0
+    #count = 0
     #x = inputs = Input([None, None, 3])
     inputs = conv2d_with_padding(inputs, filters=32, kernel_size=3, data_format=data_format)
     inputs = batch_norm(inputs, training, data_format)
@@ -54,9 +54,9 @@ def darknet53(inputs, activation, name=None, training=False, data_format=None):
     inputs = LeakyReLU(alpha=activation)(inputs)
 
     for i in range(4):
-        outputs = darknet_residual(inputs, filters=512, training=training, data_format=data_format, activation=activation)
+        inputs = darknet_residual(inputs, filters=512, training=training, data_format=data_format, activation=activation)
 
-    aux = tf.keras.Model(x, (route1,route2,outputs), name=name)
+    aux = tf.keras.Model(x, (route1,route2,inputs), name=name)
     aux.summary()
     #return tf.keras.Model(x, (route1,route2,outputs), name=name)
     return route1, route2, outputs #RESTITUIRE QUESTO O UN MODELLO?
