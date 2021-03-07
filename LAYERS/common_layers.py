@@ -23,10 +23,9 @@ def conv2d_with_padding(inputs, filters, kernel_size, data_format, strides=1):
     else:
         inputs = ZeroPadding2D(((1, 0), (1, 0)))(inputs)  # top left half-padding
         padding = 'valid'
-    temp = strides
 
     output = Conv2D(filters=filters, kernel_size=kernel_size,
-                strides=temp, padding=padding, use_bias= False, 
+                strides=strides, padding=padding, use_bias= False, 
                 data_format=data_format, kernel_regularizer=l2(0.0005))(inputs)
 
     return output
@@ -100,10 +99,10 @@ def yolo_convolution_block(inputs, filters, training, data_format, activation, n
     inputs = conv2d_with_padding(inputs, 2*filters, kernel_size=3, data_format=data_format)
     inputs = batch_norm(inputs, training, data_format)
     #output = tf.nn.leaky_relu(inputs, alpha= activation)
-    output = LeakyReLU(alpha=activation)(inputs)
+    inputs = LeakyReLU(alpha=activation)(inputs)
 
     #return Model(x, (route,output), name=name)
-    return route, output
+    return route, inputs
 
 #Final detection layer
 def yolo_layer(inputs, n_classes, anchors, img_size, data_format, name=None):

@@ -36,17 +36,15 @@ def main():
     
     print("Loading weights...")
     print()
-    load_yolo_weights_2(yolo, WEIGHTS_PATH)
-    print("Loading done! Congrats!!!!!")
+    load_yolo_weights(yolo, WEIGHTS_PATH)
+    print("Loading done!\nCongrats!!!!!")
     print()
-    #weight_reader = WeightReader(WEIGHTS_PATH)
-    #weight_reader.load_weights(yolo)
-    
-    #yolo.load_weights(WEIGHTS_PATH)
-    #load_darknet_weights(yolo, WEIGHTS_PATH)
+
+    '''
     img = cv2.imread(IMG_PATH)
     #print("@")
     #print(type(img))
+
     img = tf.image.decode_image(open(IMG_PATH, 'rb').read(), channels=3)
     img = tf.expand_dims(img,0)
     img = tf.image.resize(img, MODEL_IMG_SIZE) /255
@@ -55,9 +53,24 @@ def main():
 
     boxes, scores, classes, nums = yolo(img)
 
+    print("Ispection of yolo(img)")
+    print("-----------")
+    print("Boxes-->")
+    print()
+    print(boxes)
+    print("Score-->")
+    print()
+    print(scores)
+    print("Classes-->")
+    print()
+    print(classes)
+    print("Nums-->")
+    print()
+    print(nums)
+
     result = draw_boxes(img, (boxes, scores, classes, nums), CLASS_NAMES)
     #print(result)
     tf.keras.preprocessing.image.save_img('/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/result.png',result[0])
     #cv2.imshow('image',result)
-    
+    '''
 main()

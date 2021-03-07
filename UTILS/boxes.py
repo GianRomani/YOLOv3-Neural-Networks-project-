@@ -5,6 +5,7 @@ import tensorflow as tf
 
 
 def draw_boxes(img, outputs, class_names): #visual representation of model's computed BB
+    
     '''
     print()
     print("Ispection of input var 'output' of draw_bb")
@@ -46,7 +47,9 @@ def draw_boxes(img, outputs, class_names): #visual representation of model's com
     return img
 
 def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
-    
+    #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    #print(inputs)
+
     #retrieve information after all detections have been performed during model definition,
     #for position of specific values refer to yolo_layer function's output in LAYERS dir
     tx, ty, tw, th, confidence, classes = \
@@ -59,6 +62,9 @@ def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
     x2 = tx + tw / 2     #bottomleft_x corner
     y2 = ty + th / 2    #bottomleft_y corner
 
+    #print("@@@@@@@@@@@@@@@@@")
+    #print(x1,y1,x2,y2)
+
     #finally we pack all values together to be used for NMS
     boxes = tf.concat([y1, x1, 
                         y2, x2, 
@@ -68,7 +74,7 @@ def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
     return boxes
 
 def nms (inputs, classes, iou_threshold, confidence_threshold):
-    
+
     #retrive information from output of build_boxes in a compatible format with NMS function
     diag_coord, confidence, classes = \
         tf.split(inputs, [4,1,-1], axis = -1)

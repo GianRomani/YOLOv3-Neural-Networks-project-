@@ -31,12 +31,13 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
     x = inputs = Input([model_size[0],model_size[1],3]) #Per ora ho messo 416x416 anche per darknet53
     #Backbone
     route1, route2, inputs = darknet53(inputs, activation, name='yolo_darknet')#(inputs)
+    
     #Detect1
     route, inputs = yolo_convolution_block(inputs, 512, training, data_format, activation, name='yolo_conv0')
-    
+
     detect1 = yolo_layer(inputs, n_classes, anchors[6:9], model_size, data_format, name='yolo_layer0')
 
-    inputs = convolutional_block(inputs, 256, 1, training, data_format, activation, name='conv_block0')
+    inputs = convolutional_block(route, 256, 1, training, data_format, activation, name='conv_block0')
     #inputs = batch_norm(inputs, training, data_format) 
     #inputs = tf.nn.leaky_relu(inputs, alpha = activation)
     #inputs = LeakyReLU(alpha=activation)(inputs)
@@ -48,7 +49,7 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
     
     detect2 = yolo_layer(inputs, n_classes, anchors[3:6], model_size, data_format, name='yolo_layer1')
 
-    inputs = convolutional_block(inputs, 128, 1, training, data_format, activation, name='conv_block1')
+    inputs = convolutional_block(route, 128, 1, training, data_format, activation, name='conv_block1')
     #inputs = batch_norm(inputs, training, data_format) 
     #inputs = tf.nn.leaky_relu(inputs, alpha = activation)
     #inputs = LeakyReLU(alpha=activation)(inputs)
@@ -62,12 +63,12 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
 
     inputs = tf.concat([detect1, detect2, detect3], axis=1)
 
-    inputs = build_boxes(inputs)
+    #inputs = build_boxes(inputs)
 
-    outputs = nms(inputs, n_classes, iou_threshold, confidence_threshold)
+    #outputs = nms(inputs, n_classes, iou_threshold, confidence_threshold)
 
-    aux = Model(x, outputs, name='yolov3')
+    aux = Model(x, inputs, name='yolov3')
 
-    #aux.summary()
+    aux.summary()
 
     return aux

@@ -56,8 +56,8 @@ def darknet53(inputs, activation, name=None, training=False, data_format=None):
     for i in range(4):
         inputs = darknet_residual(inputs, filters=512, training=training, data_format=data_format, activation=activation)
 
-    aux = tf.keras.Model(x, (route1,route2,inputs), name=name)
-    aux.summary()
+    #aux = tf.keras.Model(x, (route1,route2,inputs), name=name)
+    #aux.summary()
     #return tf.keras.Model(x, (route1,route2,outputs), name=name)
-    return route1, route2, outputs #RESTITUIRE QUESTO O UN MODELLO?
+    return route1, route2, inputs #RESTITUIRE QUESTO O UN MODELLO?
 
