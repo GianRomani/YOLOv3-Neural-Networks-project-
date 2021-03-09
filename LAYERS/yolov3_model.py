@@ -65,7 +65,7 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
 
     #inputs = build_boxes(inputs)
 
-    #outputs = nms(inputs, n_classes, iou_threshold, confidence_threshold)
+    #inputs = nms(inputs, n_classes, iou_threshold, confidence_threshold)
 
     aux = Model(x, inputs, name='yolov3')
 
