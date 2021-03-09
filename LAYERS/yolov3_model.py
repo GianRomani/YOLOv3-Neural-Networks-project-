@@ -69,6 +69,6 @@ def yolov3(n_classes, model_size, anchors, iou_threshold, confidence_threshold, 
 
     aux = Model(x, inputs, name='yolov3')
 
-    aux.summary()
+    #aux.summary()
 
     return aux

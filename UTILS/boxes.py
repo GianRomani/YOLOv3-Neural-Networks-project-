@@ -78,31 +78,32 @@ def postprocess_boxes(pred_bbox, original_image, input_size, score_threshold):
     # 1. (x, y, w, h) --> (xmin, ymin, xmax, ymax)
     pred_coor = np.concatenate([pred_xywh[:, :2] - pred_xywh[:, 2:] * 0.5,              #(pred_xy - (pred_wh/2), pred_xy + (pred_wh/2)) -->
                                 pred_xywh[:, :2] + pred_xywh[:, 2:] * 0.5], axis=-1)    # getting bottom left top right coord of pred_bbox
+    '''
     print("inspecting shape")
     print(np.shape(pred_coor))
     print(pred_coor[1])
-
+    '''
     # 2. (xmin, ymin, xmax, ymax) -> (xmin_org, ymin_org, xmax_org, ymax_org)
     org_h, org_w = original_image.shape[:2]
     resize_ratio = min(input_size / org_w, input_size / org_h)
-    print()
-    print("Printing resize ratio")
-    print(resize_ratio)
+    # print()
+    # print("Printing resize ratio")
+    # print(resize_ratio)
 
     dw = (input_size - resize_ratio * org_w) / 2
     dh = (input_size - resize_ratio * org_h) / 2
 
-    print()
-    print("Printing dw dh")
-    print(dw)
-    print(dh)
+    # print()
+    # print("Printing dw dh")
+    # print(dw)
+    # print(dh)
 
-    print()
-    print("Printing pred_coor[:, 0::2]")
-    print(pred_coor[:, 0::2])
-    print()
-    print("Printing pred_coor[:, 1::2]")
-    print(pred_coor[:, 1::2])
+    # print()
+    # print("Printing pred_coor[:, 0::2]")
+    # print(pred_coor[:, 0::2])
+    # print()
+    # print("Printing pred_coor[:, 1::2]")
+    # print(pred_coor[:, 1::2])
 
 
     pred_coor[:, 0::2] = 1.0 * (pred_coor[:, 0::2] - dw) / resize_ratio
@@ -115,7 +116,7 @@ def postprocess_boxes(pred_bbox, original_image, input_size, score_threshold):
     pred_coor[invalid_mask] = 0
 
     # 4. discard some invalid boxes
-    bboxes_scale = np.sqrt(np.multiply.reduce(pred_coor[:, 2:4] - pred_coor[:, 0:2], axis=-1))
+    bboxes_scale = np.sqrt(np.multiply.reduce(pred_coor[:, 2:4] - pred_coor[:, 0:2], axis=-1)) #multiply is applied only to axis=-1 thanks to reduce
     scale_mask = np.logical_and((valid_scale[0] < bboxes_scale), (bboxes_scale < valid_scale[1]))
 
     # 5. discard boxes with low scores
@@ -125,7 +126,7 @@ def postprocess_boxes(pred_bbox, original_image, input_size, score_threshold):
     mask = np.logical_and(scale_mask, score_mask)
     coors, scores, classes = pred_coor[mask], scores[mask], classes[mask]
 
-    return np.concatenate([coors, scores[:, np.newaxis], classes[:, np.newaxis]], axis=-1)
+    return np.concatenate([coors, scores[:, np.newaxis], classes[:, np.newaxis]], axis=-1) #newaxis = None
 
 def bboxes_iou(boxes1, boxes2):
     boxes1 = np.array(boxes1)
@@ -179,14 +180,13 @@ def nms(bboxes, iou_threshold, sigma=0.3, method='nms'):
 
     print("testing split")
     print(boxes)
-    print(type(boxes))
+    print(tf.shape(boxes))
     print(score)
-    print(type(score))
+    print(tf.shape(score))
     print(clss)
-    print(type(clss))
+    print(tf.shape(clss))
 
     selected_indices = tf.image.non_max_suppression(boxes, score, 15, 0.4, 0.4)
-
 
     classes_in_img = list(set(bboxes[:, 5]))
     best_bboxes = []
@@ -242,9 +242,88 @@ def nms(bboxes, iou_threshold, sigma=0.3, method='nms'):
     
     return best_bboxes
 
+def non_max_suppression(inputs, n_classes, max_output_size, iou_threshold,
+                        confidence_threshold):
+    """Performs non-max suppression separately for each class.
+    Args:
+        inputs: Tensor input.
+        n_classes: Number of classes.
+        max_output_size: Max number of boxes to be selected for each class.
+        iou_threshold: Threshold for the IOU.
+        confidence_threshold: Threshold for the confidence score.
+    Returns:
+        A list containing class-to-boxes dictionaries
+            for each sample in the batch.
+    """
+    print('------NMS-------')
+    # print()
+    # print(f'='*30)
+    # print(inputs)
+    # print(tf.shape(inputs))
+
+    boxes = tf.unstack(inputs)
+    # print(f'='*30)
+    # print(boxes)
+    # print(tf.shape(boxes))
+
+    # boxes_dicts = []
+    #for boxes in batch:
+    # print()
+    # print(f'^'*30)
+    # print(boxes)
+    # print(tf.shape(boxes))
+    # print()
+    # print(f'%'*50)
+    # print(inputs[:,:4])
+    boxes = tf.boolean_mask(inputs, inputs[:,4] > confidence_threshold)
+    #classes = tf.argmax(inputs[:,5:], axis=-1)
+    #classes = 
+    classes = tf.reshape(inputs[:, 5:] , (-1))
+    #print(classes)
+    classes = tf.expand_dims(tf.cast(classes, dtype=tf.float32), axis=-1)
+    boxes = tf.concat([inputs[:, :5], classes], axis=-1)
+    #print(boxes)
+    # boxes_dict = dict()
+    #best_bboxes = [[]]
+    #best_bboxes = tf.zeros([1,6])
+    array_bboxes = []
+    for cls in range(n_classes):
+        mask = tf.equal(boxes[:, 5], cls)
+        mask_shape = mask.get_shape()
+        #print(mask_shape)
+        if mask_shape.ndims != 0:
+            class_boxes = tf.boolean_mask(boxes, mask)
+            boxes_coords, boxes_conf_scores, _ = tf.split(class_boxes, [4, 1, -1], axis=-1)
+            boxes_conf_scores = tf.reshape(boxes_conf_scores, [-1])
+            indices = tf.image.non_max_suppression(boxes_coords, boxes_conf_scores, max_output_size, iou_threshold)
+            class_boxes = tf.gather(class_boxes, indices)
+            if tf.shape(class_boxes)[0] != 0 :
+                # print(f'!'*50)
+                # print('Class_boxes')
+                # print(class_boxes)
+                # print(f'Class:{class_boxes[:,5]}, shape: {tf.shape(class_boxes)[0]}')
+                # boxes_dict[cls] = class_boxes[:, :5]
+                # print('Boxes_dict')
+                # print(boxes_dict)
+                #print(tf.shape(best_bboxes),tf.shape(class_boxes))
+                #best_bboxes = tf.concat([best_bboxes,class_boxes], axis=0)
+                array_bboxes.append(class_boxes)
+                #best_bboxes.append(class_boxes)
+                # print('Array_bboxes')
+                # print(array_bboxes)
+                # print()
+    best_bboxes = tf.concat(array_bboxes, axis=0)
+    #tf.reshape(best_bboxes,[3,6])
+    # print('Best_bboxes')
+    print(best_bboxes)
+    #boxes_dicts.append(boxes_dict)
+    #print(boxes_dicts)
+    return best_bboxes
+    #return boxes_dicts
+
 def draw_bbox(image, bboxes, CLASSES=LABELS_PATH, show_label=True, show_confidence = True, Text_colors=(255,255,0), rectangle_colors='', tracking=False):   
-    print("!!!!!!!!!!")
-    print(bboxes)
+    # print("!!!!!!!!!!")
+    #print(bboxes)
 
     
     NUM_CLASS = read_class_names(CLASSES)

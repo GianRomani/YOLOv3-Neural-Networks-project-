@@ -14,14 +14,18 @@ LEAKY_RELU = 0.1
 ANCHORS = [(10, 13), (16, 30), (33, 23),
             (30, 61), (62, 45), (59, 119),
             (116, 90), (156, 198), (373, 326)]
-WEIGHTS_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/yolov3.weights'
+#WEIGHTS_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/yolov3.weights'
+WEIGHTS_PATH = 'yolov3.weights'
 NUM_CLASSES = 80
-LABELS_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET/coco.names'
+#LABELS_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET/coco.names'
+LABELS_PATH = 'DATASET/coco.names'
 MODEL_IMG_SIZE = (416,416)
 IOU_THRESHOLD = 0.5	
 CONFIDENCE_THRESHOLD = 0.5
-IMG_PATH  = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET/dog.jpg'
-PRED_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET' 
+#IMG_PATH  = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET/dog.jpg'
+IMG_PATH  = 'DATASET/dog.jpg'
+#PRED_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET' 
+PRED_PATH = 'DATASET' 
 
 CLASS_NAMES =  ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck",
   "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
@@ -46,12 +50,12 @@ def detect_image(Yolo, image_path, output_path, input_size=416, show=False, CLAS
     pred_bbox = tf.reshape(pred_bbox[0], (-1, tf.shape(pred_bbox[0])[-1])) #reshaping into 2D 
 
     bboxes = postprocess_boxes(pred_bbox, original_image, input_size, score_threshold)
-    print("%%%%%%%%%%%%%%%")
-    print(bboxes)
-    print(tf.shape(bboxes))
+    # print("%%%%%%%PostProcess%%%%%%%%")
+    # print(bboxes)
+    # print(tf.shape(bboxes))
 
-    bboxes = nms(bboxes, iou_threshold, method='nms')
-
+    #bboxes = nms(bboxes, iou_threshold, method='nms')
+    bboxes = non_max_suppression(bboxes, 80, 10, 0.5, 0.5)
     image = draw_bbox(original_image, bboxes, CLASSES=CLASSES, rectangle_colors=rectangle_colors)
     # CreateXMLfile("XML_Detections", str(int(time.time())), original_image, bboxes, read_class_names(CLASSES))
 
