@@ -56,7 +56,18 @@ def detect_image(Yolo, image_path, output_path, input_size=416, show=False, CLAS
 
     #bboxes = nms(bboxes, iou_threshold, method='nms')
     bboxes = non_max_suppression(bboxes, 80, 10, 0.5, 0.5)
-    image = draw_bbox(original_image, bboxes, CLASSES=CLASSES, rectangle_colors=rectangle_colors)
+    #draw_boxes(original_image, bboxes, CLASSES)
+    image = draw_boxes(original_image, bboxes, CLASSES)
+    #image  = draw_bbox(original_image, bboxes, CLASSES=CLASSES, rectangle_colors=rectangle_colors)
+
+
+    #cv2.imshow("predicted image", image)
+    cv2.imshow("predicted image with our method", image)
+
+    cv2.waitKey(0)
+
+    cv2.destroyAllWindows()
+    '''
     # CreateXMLfile("XML_Detections", str(int(time.time())), original_image, bboxes, read_class_names(CLASSES))
 
     #if output_path != '': cv2.imwrite(output_path, image)
@@ -67,6 +78,7 @@ def detect_image(Yolo, image_path, output_path, input_size=416, show=False, CLAS
         cv2.waitKey(0)
         # To close the window after the required kill value was provided
         cv2.destroyAllWindows()
+    '''
         
     return image
 
@@ -81,6 +93,8 @@ def main():
     print("Loading done!\nCongrats!!!!!")
     print()
     
-    detect_image(yolo, IMG_PATH, PRED_PATH, 416, show=True, rectangle_colors=(255,0,0))
+    detection = detect_image(yolo, IMG_PATH, PRED_PATH, 416, show=True, rectangle_colors=(255,0,0))
+
+    #save to disk eventually
 
 main()

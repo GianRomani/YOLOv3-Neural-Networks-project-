@@ -19,17 +19,6 @@ CONFIDENCE_THRESHOLD = 0.5
 IMG_PATH  = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET/dog.jpg'
 PRED_PATH = '/home/cip/Desktop/NN Proj/[]REPO DI SUPPORTO/YOLOv3-Neural-Networks-project-/DATASET' 
 
-CLASS_NAMES =  ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck",
-  "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
-  "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe",
-  "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
-  "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-  "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
-  "banana","apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut",
-  "cake","chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop",
-  "mouse","remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
-  "refrigerator","book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"]
-
 
 def read_class_names(class_file_name):
     # loads class name from a file
@@ -128,23 +117,6 @@ def postprocess_boxes(pred_bbox, original_image, input_size, score_threshold):
 
     return np.concatenate([coors, scores[:, np.newaxis], classes[:, np.newaxis]], axis=-1) #newaxis = None
 
-def bboxes_iou(boxes1, boxes2):
-    boxes1 = np.array(boxes1)
-    boxes2 = np.array(boxes2)
-
-    boxes1_area = (boxes1[..., 2] - boxes1[..., 0]) * (boxes1[..., 3] - boxes1[..., 1])
-    boxes2_area = (boxes2[..., 2] - boxes2[..., 0]) * (boxes2[..., 3] - boxes2[..., 1])
-
-    left_up       = np.maximum(boxes1[..., :2], boxes2[..., :2])
-    right_down    = np.minimum(boxes1[..., 2:], boxes2[..., 2:])
-
-    inter_section = np.maximum(right_down - left_up, 0.0)
-    inter_area    = inter_section[..., 0] * inter_section[..., 1]
-    union_area    = boxes1_area + boxes2_area - inter_area
-    ious          = np.maximum(1.0 * inter_area / union_area, np.finfo(np.float32).eps)
-
-    return ious
-
 
 def nms(bboxes, iou_threshold, sigma=0.3, method='nms'):
     """
@@ -160,15 +132,17 @@ def nms(bboxes, iou_threshold, sigma=0.3, method='nms'):
     print(tf.shape(bboxes))
     print("!!!!!!!!!!!!!!!!!!")
 
-    '''             0       1       2       3
+    '''
+                    0       1       2       3
     bbox input = [ x_min, y_min, x_max, y_max, score, class ]
                     1       0       3       2
-
+    
     Bounding boxes are supplied as [y1, x1, y2, x2], where (y1, x1) and (y2, x2) are the coordinates of any diagonal pair of box corners 
     and the coordinates can be provided as normalized (i.e., lying in the interval [0, 1]) or absolute.
 
     boxes 	A 2-D float Tensor of shape [num_boxes, 4].
     scores 	A 1-D float Tensor of shape [num_boxes] representing a single score corresponding to each box (each row of boxes).
+
     '''
     
     boxes, score, clss = tf.split(bboxes, [4,1,1], axis=-1)   
@@ -242,6 +216,7 @@ def nms(bboxes, iou_threshold, sigma=0.3, method='nms'):
     
     return best_bboxes
 
+
 def non_max_suppression(inputs, n_classes, max_output_size, iou_threshold,
                         confidence_threshold):
     """Performs non-max suppression separately for each class.
@@ -256,228 +231,74 @@ def non_max_suppression(inputs, n_classes, max_output_size, iou_threshold,
             for each sample in the batch.
     """
     print('------NMS-------')
-    # print()
-    # print(f'='*30)
-    # print(inputs)
-    # print(tf.shape(inputs))
+    print()
+    print(f'='*30)
+    print(inputs)
+    print(tf.shape(inputs))
 
-    boxes = tf.unstack(inputs)
-    # print(f'='*30)
-    # print(boxes)
-    # print(tf.shape(boxes))
-
-    # boxes_dicts = []
-    #for boxes in batch:
-    # print()
-    # print(f'^'*30)
-    # print(boxes)
-    # print(tf.shape(boxes))
-    # print()
-    # print(f'%'*50)
-    # print(inputs[:,:4])
-    boxes = tf.boolean_mask(inputs, inputs[:,4] > confidence_threshold)
-    #classes = tf.argmax(inputs[:,5:], axis=-1)
-    #classes = 
     classes = tf.reshape(inputs[:, 5:] , (-1))
-    #print(classes)
+    print(f'='*30)
+    print(classes)
+    print(tf.shape(classes))
+
     classes = tf.expand_dims(tf.cast(classes, dtype=tf.float32), axis=-1)
+
     boxes = tf.concat([inputs[:, :5], classes], axis=-1)
-    #print(boxes)
-    # boxes_dict = dict()
-    #best_bboxes = [[]]
-    #best_bboxes = tf.zeros([1,6])
+    print(f'='*30)
+    print(boxes)
+    print(tf.shape(boxes))
+    
     array_bboxes = []
+
     for cls in range(n_classes):
+        #print("Currently analizing class number: "+str(cls))
         mask = tf.equal(boxes[:, 5], cls)
         mask_shape = mask.get_shape()
-        #print(mask_shape)
+
         if mask_shape.ndims != 0:
             class_boxes = tf.boolean_mask(boxes, mask)
+            ''' 
+            print(f'+'*50)
+            print('Class_boxes before NMS')
+            print(class_boxes)
+            '''
+            
             boxes_coords, boxes_conf_scores, _ = tf.split(class_boxes, [4, 1, -1], axis=-1)
             boxes_conf_scores = tf.reshape(boxes_conf_scores, [-1])
             indices = tf.image.non_max_suppression(boxes_coords, boxes_conf_scores, max_output_size, iou_threshold)
+            
             class_boxes = tf.gather(class_boxes, indices)
             if tf.shape(class_boxes)[0] != 0 :
-                # print(f'!'*50)
-                # print('Class_boxes')
-                # print(class_boxes)
-                # print(f'Class:{class_boxes[:,5]}, shape: {tf.shape(class_boxes)[0]}')
-                # boxes_dict[cls] = class_boxes[:, :5]
-                # print('Boxes_dict')
-                # print(boxes_dict)
-                #print(tf.shape(best_bboxes),tf.shape(class_boxes))
-                #best_bboxes = tf.concat([best_bboxes,class_boxes], axis=0)
+                '''
+                print(f'!'*50)
+                print('Class_boxes')
+                print(class_boxes)
+                print(f'Class:{class_boxes[:,5]}, shape: {tf.shape(class_boxes)[0]}')
+                '''
                 array_bboxes.append(class_boxes)
-                #best_bboxes.append(class_boxes)
-                # print('Array_bboxes')
-                # print(array_bboxes)
-                # print()
-    best_bboxes = tf.concat(array_bboxes, axis=0)
-    #tf.reshape(best_bboxes,[3,6])
-    # print('Best_bboxes')
-    print(best_bboxes)
-    #boxes_dicts.append(boxes_dict)
-    #print(boxes_dicts)
-    return best_bboxes
-    #return boxes_dicts
-
-def draw_bbox(image, bboxes, CLASSES=LABELS_PATH, show_label=True, show_confidence = True, Text_colors=(255,255,0), rectangle_colors='', tracking=False):   
-    # print("!!!!!!!!!!")
-    #print(bboxes)
-
     
-    NUM_CLASS = read_class_names(CLASSES)
-    num_classes = len(NUM_CLASS)
-    image_h, image_w, _ = image.shape
-    hsv_tuples = [(1.0 * x / num_classes, 1., 1.) for x in range(num_classes)]
-    #print("hsv_tuples", hsv_tuples)
-    colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
-    colors = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), colors))
 
-    random.seed(0)
-    random.shuffle(colors)
-    random.seed(None)
+    best_bboxes = tf.concat(array_bboxes, axis=0)
 
-    for i, bbox in enumerate(bboxes):
-        coor = np.array(bbox[:4], dtype=np.int32)
-        score = bbox[4]
-        class_ind = int(bbox[5])
-        bbox_color = rectangle_colors if rectangle_colors != '' else colors[class_ind]
-        bbox_thick = int(0.6 * (image_h + image_w) / 1000)
-        if bbox_thick < 1: bbox_thick = 1
-        fontScale = 0.75 * bbox_thick
-        (x1, y1), (x2, y2) = (coor[0], coor[1]), (coor[2], coor[3])
-
-        # put object rectangle
-        cv2.rectangle(image, (x1, y1), (x2, y2), bbox_color, bbox_thick*2)
-
-        if show_label:
-            # get text label
-            score_str = " {:.2f}".format(score) if show_confidence else ""
-
-            if tracking: score_str = " "+str(score)
-
-            try:
-                label = "{}".format(NUM_CLASS[class_ind]) + score_str
-            except KeyError:
-                print("You received KeyError, this might be that you are trying to use yolo original weights")
-                print("while using custom classes, if using custom model in configs.py set YOLO_CUSTOM_WEIGHTS = True")
-
-            # get text size
-            (text_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                                                  fontScale, thickness=bbox_thick)
-            # put filled text rectangle
-            cv2.rectangle(image, (x1, y1), (x1 + text_width, y1 - text_height - baseline), bbox_color, thickness=cv2.FILLED)
-
-            # put text above rectangle
-            cv2.putText(image, label, (x1, y1-4), cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                        fontScale, Text_colors, bbox_thick, lineType=cv2.LINE_AA)
-
-    return image
+    return best_bboxes
 
 def draw_boxes(img, outputs, class_names): #visual representation of model's computed BB
-    
-    '''
-    print()
-    print("Ispection of input var 'output' of draw_bb")
-    print(outputs)
-    print()
-    '''
 
-    nms_boxes, nms_score, nms_classes, nums = outputs
-
-    boxes, score, classes, nums = nms_boxes[0], nms_score[0], nms_classes[0], nums[0] #values returned explicitely by the yolo detection
-
-    '''
-    print("Ispection of outputs[0] variable")
-    print("-----------")
-    print("Boxes-->")
-    print()
-    print(boxes)
-    print("Score-->")
-    print()
-    print(score)
-    print("Classes-->")
-    print()
+    classes = read_class_names(class_names)
     print(classes)
-    print("Nums-->")
-    print()
-    print(nums)
-    '''
+    
+    for detection in outputs:
+        x1y1, x2y2, score, clss = tf.split(detection, [2,2,1,1], axis=0)
 
-    img_scale = np.flip(img.shape[0:2]) #get widht/height of the image to adjust bb dim
-
-    for i in range(nums): #for every detection
-        x1y1 = tuple((np.array(boxes[i][0:2])*img_scale).astype(np.int32)) #rescaled bb topleft_coordinate
-        x2y2 = tuple((np.array(boxes[i][2:4])*img_scale).astype(np.int32)) #rescaled bb bottomright_coordinate
+        x1y1    = (int(x1y1[0]),int(x1y1[1]))
+        x2y2    = (int(x2y2[0]),int(x2y2[1]))
+        score   = float(score[0])
+        idx     = int(clss[0])
+        
+        class_label = classes[idx]
 
         img = cv2.rectangle(img, x1y1, x2y2, (255,0,0), 2) #draw rectangle bases on new coordinates
-        img = cv2.putText(img, '{} {:.4f}'.format(class_names[int(classes[i])], score[i]),txty, cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2) #for each detection complete the rectangle description
-    #print("#")
-    #print(type(img))
+        img = cv2.putText(img, '{} {:.4f}'.format(class_label, score),x1y1, cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 255), 2) #for each detection complete the rectangle description
+        
     return img
 
-def build_boxes(inputs): #compute topleft and bottom right coordinatas of the BB
-    #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    #print(inputs)
-
-    #retrieve information after all detections have been performed during model definition,
-    #for position of specific values refer to yolo_layer function's output in LAYERS dir
-    tx, ty, tw, th, confidence, classes = \
-        tf.split(inputs, [1,1,1,1,1,-1], axis=-1)
-    
-    #now we simply compute the coordinates of the BB
-    x1 = tx - tw / 2     #topleft_x corner
-    y1 = ty - th / 2    #topleft_y corner 
-
-    x2 = tx + tw / 2     #bottomleft_x corner
-    y2 = ty + th / 2    #bottomleft_y corner
-
-    #print("@@@@@@@@@@@@@@@@@")
-    #print(x1,y1,x2,y2)
-
-    #finally we pack all values together to be used for NMS
-    boxes = tf.concat([y1, x1, 
-                        y2, x2, 
-                        confidence, classes], axis=-1)
-
-
-    return boxes
-
-def nms_2 (inputs, classes, iou_threshold, confidence_threshold):
-
-    #retrive information from output of build_boxes in a compatible format with NMS function
-    diag_coord, confidence, classes = \
-        tf.split(inputs, [4,1,-1], axis = -1)
-    
-    #combine confidence scores with all classes
-    scores = confidence * classes
-
-    #tf function specification
-    #tf.image.combined_non_max_suppression(
-        #boxes, scores, 
-        #max_output_size_per_class, 
-        #max_total_size, 
-        #iou_threshold=0.5,
-        #score_threshold=float('-inf')
-    #)
-
-    nms_boxes, nms_scores, nms_classes, valid_detections = \
-        tf.image.combined_non_max_suppression(
-            boxes = tf.reshape(diag_coord, (tf.shape(diag_coord)[1], -1, 1, 4)),
-            scores = tf.reshape(scores, (tf.shape(scores)[1], -1, tf.shape(classes)[-1])),
-            max_output_size_per_class = 5,
-            max_total_size = 5,
-            iou_threshold = iou_threshold,
-            score_threshold = confidence_threshold
-        )
-    '''
-    print("Inspecting result of NMS")
-    print(nms_boxes)
-    print(nms_scores)
-    print(nms_classes)
-    print(valid_detections)
-    '''
-
-    return nms_boxes, nms_scores, nms_classes, valid_detections
-    
