@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import ZeroPadding2D, Conv2D, LeakyReLU, Input, Add
+from tensorflow.keras.layers import ZeroPadding2D, Conv2D, LeakyReLU, Input, Add, BatchNormalization
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras import Model
 
@@ -8,7 +8,7 @@ BATCH_NORM_EPSILON = 1e-05
 
 #Batch Normalization
 def batch_norm(inputs, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON):
-    return tf.keras.layers.BatchNormalization(
+    return BatchNormalization(
         axis = 3, momentum = momentum, epsilon = epsilon,
         scale = True, trainable = False)(inputs)
 
@@ -85,7 +85,7 @@ def yolo_layer(inputs, n_classes, anchors, img_size, name=None):
     #Now we can get the values of the bounding boxes
     box_centers, box_shapes, confidence, classes = tf.split(output_reshaped, [2,2,1,n_classes], axis=-1)
     strides = (img_size[0] // grid_shape[0], img_size[1] // grid_shape[1])
-    
+   
     '''
     Compute the top-left coordinates for the cells, x_y_offset.
     x_y_offset is an array of couples that has to be added to box_centers.
