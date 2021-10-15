@@ -1,5 +1,5 @@
 # YOLOv3-Neural-Networks-project-Tensorflow 2.1.x
-Final project for Neural Networks course
+Final project for Neural Networks course -> Implementation of the paper "YOLOv3: An incremental improvement" (https://arxiv.org/pdf/1804.02767.pdf)
 
 ### Prerequisites
 This project is written in Python 3.6.9 using Tensorflow (deep learning), NumPy (numerical computing) and OpenCV (computer vision).
